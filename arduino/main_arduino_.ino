@@ -19,6 +19,8 @@ Servo myServo;  // Create servo object
 float maxBinDistance;
 const int joystickY = A0;  // Y-axis pin
 int yValue;
+String binState = "Close";
+
 
 void setup() {
   // put your setup code here, to run once:
@@ -35,25 +37,26 @@ void setup() {
   display.clearDisplay();
   display.display();
   float sum = 0;
-  for(int i=0; i<10; i++){
+  for(int i=0; i<20; i++){
     float maxBinDistance = getDistance();
     sum += maxBinDistance;
   }
-  maxBinDistance = sum/10;
+  maxBinDistance = sum/20;
 
 }
 
 void closeBin(){
   for (int pos = 0; pos <= 90; pos += 1) { 
       myServo.write(pos); 
-      delay(15); // Smooth motion delay
+      binState = "Close";
+      delay(15);
   }
 }
 
 void openBin(){
   for (int pos = 90; pos >= 0; pos -= 1) { 
       myServo.write(pos); 
-      delay(15); // Smooth motion delay
+      binState = "Open";
   }
 }
 
@@ -73,12 +76,12 @@ void loop() {
   
   // put your main code here, to run repeatedly:
   String command = Serial.readStringUntil('\n'); // PYTHON open/close command
+  command.trim();
 
   float distance = getDistance();
   Serial.print("Trash Distance: ");
   Serial.print(distance);
   Serial.println(" cm");
-  Serial.println(maxBinDistance);
 
   int percentageFull = ((maxBinDistance-distance)/20) * 100;
   if (distance < BIN_FULL_THRESHOLD) {
@@ -88,9 +91,11 @@ void loop() {
       Serial.println("Bin is " + String(percentageFull) + "% full!");
       if(command == "OPEN"){
         openBin();
+        delay(6000);
+        closeBin();
       }
   }
-  else if (distance > maxBinDistance+0.1){
+  else if (distance > maxBinDistance+1){
       Serial.println("Bin is opened!");  // Keep lid open
   }
 
@@ -99,22 +104,21 @@ void loop() {
   display.setTextSize(2);
   display.setTextColor(SSD1306_WHITE);
   display.setCursor(10, 25);
-  if (percentageFull < 100 && percentageFull >= 0) {
+  if (abs(percentageFull) < 100 && abs(percentageFull) >= 0) {
     display.print("Capacity: ");
-    display.print(percentageFull);
+    display.print(abs(percentageFull));
     display.print("%");
   
   } 
   else if (percentageFull >= 100){
     display.print("ITS FULL :(");
   }
-  else{
+  else if (distance > maxBinDistance+1){
     display.print("Opened");
   }
   display.display();
 
   yValue = analogRead(joystickY); //make sure this is in the right orientation (the y axis might be the x axis depending on the orientation of the stick)
-  Serial.println(yValue);
 
   if (yValue > 800){
     Serial.println("OPEN THE DOOR");
@@ -127,11 +131,12 @@ void loop() {
   
   //IR sensor
   int trashDetected = digitalRead(IR_SENSOR_PIN); // Read sensor
-  if (trashDetected == HIGH) {  // If trash is thrown in
-    Serial.println("Trash Detected"); // Send message to Python
-    display.print("+1 point");
-    delay(1000)
+  Serial.println(binState);
+  if(binState == "Open"){
+    if (trashDetected == LOW) {  // If trash is thrown in
+      Serial.println("Trash Detected"); // Send message to Python
+      display.print("+1 point");
+      closeBin();
+    } 
   }
-
-  delay(100);
 }
