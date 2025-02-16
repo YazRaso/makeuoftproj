@@ -1,4 +1,4 @@
-#!/Users/yazraso/BinBash/env/bin/python3.12
+#!/Users/yazraso/nice/makeuoftproj/env/bin/python3.12
 # -*- coding: utf-8 -*-
 import re
 import sys
