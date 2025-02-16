@@ -33,59 +33,61 @@ const Home: FC = () => {
     };
 
     return (
-        <div className="container mx-auto">
+        <div className="mx-auto w-full">
             <Navbar />
 
-            {/* Leaderboard Section */}
-            <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-2xl font-bold mb-4">Leaderboard</h2>
-                <div className="space-y-4">
-                    {leaderboard.map((entry) => (
-                        <div 
-                            key={entry.rank}
-                            className="flex justify-between items-center bg-gray-50 p-3 rounded"
-                        >
-                            <div className="flex items-center">
-                                <span className="font-bold w-8">{entry.rank}.</span>
-                                <span>{entry.username}</span>
+            <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+                {/* Leaderboard Section */}
+                <div className="bg-white rounded-lg shadow p-6">
+                    <h2 className="text-2xl font-bold mb-4">Leaderboard</h2>
+                    <div className="space-y-4">
+                        {leaderboard.map((entry) => (
+                            <div 
+                                key={entry.rank}
+                                className="flex justify-between items-center bg-gray-50 p-3 rounded"
+                            >
+                                <div className="flex items-center">
+                                    <span className="font-bold w-8">{entry.rank}.</span>
+                                    <span>{entry.username}</span>
+                                </div>
+                                <span className="font-bold">{entry.score}</span>
                             </div>
-                            <span className="font-bold">{entry.score}</span>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
-            </div>
 
-            {/* Messages Section */}
-            <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-2xl font-bold mb-4">Messages</h2>
-                <div className="space-y-4 max-h-[400px] overflow-y-auto">
-                    {messages.map((message) => (
-                        <div 
-                            key={message.id}
-                            className="bg-gray-50 p-3 rounded"
-                        >
-                            <p>{message.text}</p>
-                            <span className="text-sm text-gray-500">{message.timestamp}</span>
-                        </div>
-                    ))}
+                {/* Messages Section */}
+                <div className="bg-white rounded-lg shadow p-6">
+                    <h2 className="text-2xl font-bold mb-4">Messages</h2>
+                    <div className="space-y-4 max-h-[400px] overflow-y-auto">
+                        {messages.map((message) => (
+                            <div 
+                                key={message.id}
+                                className="bg-gray-50 p-3 rounded"
+                            >
+                                <p>{message.text}</p>
+                                <span className="text-sm text-gray-500">{message.timestamp}</span>
+                            </div>
+                        ))}
+                    </div>
                 </div>
-            </div>
 
-            {/* Photo Upload Section */}
-            <div className="mt-8 text-center">
-                <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                    id="photo-upload"
-                />
-                <label
-                    htmlFor="photo-upload"
-                    className="bg-blue-600 text-white px-6 py-3 rounded-lg cursor-pointer hover:bg-blue-700 transition-colors inline-block"
-                >
-                    Upload Photo
-                </label>
+                {/* Photo Upload Section */}
+                <div className="mt-8 text-center">
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                        id="photo-upload"
+                    />
+                    <label
+                        htmlFor="photo-upload"
+                        className="bg-blue-600 text-white px-6 py-3 rounded-lg cursor-pointer hover:bg-blue-700 transition-colors inline-block"
+                    >
+                        Upload Photo
+                    </label>
+                </div>
             </div>
         </div>
     );

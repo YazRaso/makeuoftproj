@@ -3,8 +3,8 @@ import logo from '../assets/logo.png';
 
 const Navbar: FC = () => {
     return (
-        <nav className="w-full h-24 bg-white shadow">
-            <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
+        <nav className="w-full h-24 bg-white shadow border-b border-gray-200">
+            <div className="max-w-5xl mx-auto px-4 h-full flex items-center justify-between">
                 {/* Left section (empty for balance) */}
                 <div className="w-24"></div>
                 
@@ -22,12 +22,12 @@ const Navbar: FC = () => {
 
                 {/* Right section with login button */}
                 <div className="w-24 flex justify-end">
-                    <button 
+                    <a 
+                        href="/login"
                         className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 hover:cursor-pointer transition-colors"
-                        onClick={() => {/* Add login logic here */}}
                     >
                         Login
-                    </button>
+                    </a>
                 </div>
             </div>
         </nav>
