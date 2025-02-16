@@ -28,38 +28,38 @@ document.getElementById('scan-button').addEventListener('click', function() {
         if (video) {
             video.style.transform = 'scaleX(-1)';
         }
-        Quagga.start();
-    });
-    
-    Quagga.onDetected(function(result) {
-        const barcode = result.codeResult.code;
-        console.log("Barcode detected:", barcode);
-        fetch('/scan', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ barcode: barcode }),
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.error) {
-                document.getElementById('result').innerText = data.error;
-            } else {
-                document.getElementById('result').innerText = `Nutrition Info: ${JSON.stringify(data)}`;
-            }
-        })
-        .catch(error => {
-            console.error("Error sending barcode to server:", error);
-        })
-        .finally(() => {
-            scannerContainer.style.display = 'none';
+        Quagga.onDetected(function(result) {
+            const barcode = result.codeResult.code;
+            console.log("Barcode detected:", barcode);
+            fetch('/scan', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ barcode: barcode }),
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('result').innerText = data.error;
+                } else {
+                    document.getElementById('result').innerText = `Packaging Info ${JSON.stringify(data)}`;
+                }
+            })
+            .catch(error => {
+                console.error("Error sending barcode to server:", error);
+            })
+            .finally(() => {
+                scannerContainer.style.display = 'none';
+            });
+            Quagga.stop();
         });
-        Quagga.stop();
+
+        Quagga.start();
     });
 });
