@@ -1,7 +1,6 @@
 import { FC, useState, useEffect } from 'react';
 import Navbar from './Navbar';
 import Quagga from 'quagga';
-import Scanner from './Scanner';
 
 interface LeaderboardEntry {
     username: string;
@@ -15,14 +14,14 @@ interface Message {
     timestamp: string;
 }
 
-interface BarcodeInfo {
-    format: string;
-    code: string;
-    direction: string;
-    quality: number;
+interface PackagingResponse {
+    packaging_recycling?: any;
+    error?: string;
 }
 
 const Home: FC = () => {
+    const [packagingInfo, setPackagingInfo] = useState<PackagingResponse | null>(null);
+
     const [leaderboard] = useState<LeaderboardEntry[]>([
         { username: "User1", score: 100, rank: 1 },
         { username: "User2", score: 90, rank: 2 },
@@ -81,6 +80,7 @@ const Home: FC = () => {
 
             Quagga.onDetected((result: { codeResult: { format: string; code: string; direction: string; decodedCodes: { error: number }[] } }) => {
                 const code = result.codeResult.code;
+                console.log(result)
                 console.log("Barcode detected:", barcode);
 
                 setBarcode(barcode);
@@ -97,10 +97,39 @@ const Home: FC = () => {
         };
     }, [isScannerActive]);
 
+    const handleBarcodeDetected = async (code: string) => {
+        try {
+            console.log("Fetching barcode data for:", code);
+            console.log("Fetching at:", `https://world.openfoodfacts.org/api/v2/product/${code}?fields=packaging`);
+            const response = await fetch(`https://world.openfoodfacts.org/api/v2/product/${code}?fields=packaging`);
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log("Packaging data:", data);
+                // You might want to store this in state
+                const packagingInfo: PackagingResponse = {
+                    packaging_recycling: data
+                };
+                setPackagingInfo(packagingInfo);
+            } else {
+                console.error("Barcode not found");
+                const errorInfo: PackagingResponse = {
+                    error: "Barcode not found!"
+                };
+                setPackagingInfo(errorInfo);
+            }
+        } catch (error) {
+            console.error("Error fetching barcode data:", error);
+            const errorInfo: PackagingResponse = {
+                error: "Error fetching barcode data"
+            };
+            setPackagingInfo(errorInfo);
+        }
+    };
+
     return (
         <div className="mx-auto w-full">
             <Navbar />
-            <Scanner />
 
             <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
                 {/* Scanner Section */}
@@ -119,15 +148,16 @@ const Home: FC = () => {
                                 </button>
                             )}
                         </div>
-                        {barcodeInfo && (
+                        {packagingInfo && (
                             <div className="mt-4 p-4 bg-gray-50 rounded">
-                                <h3 className="font-bold mb-2">Barcode Information:</h3>
-                                <ul className="space-y-2">
-                                    <li><strong>Format:</strong> {barcodeInfo.format}</li>
-                                    <li><strong>Code:</strong> {barcodeInfo.code}</li>
-                                    <li><strong>Direction:</strong> {barcodeInfo.direction}</li>
-                                    <li><strong>Quality:</strong> {barcodeInfo.quality.toFixed(2)}</li>
-                                </ul>
+                                <h3 className="font-bold mb-2">Packaging Information:</h3>
+                                {packagingInfo.error ? (
+                                    <p className="text-red-600">{packagingInfo.error}</p>
+                                ) : (
+                                    <pre className="whitespace-pre-wrap">
+                                        {JSON.stringify(packagingInfo.packaging_recycling, null, 2)}
+                                    </pre>
+                                )}
                             </div>
                         )}
                     </div>
