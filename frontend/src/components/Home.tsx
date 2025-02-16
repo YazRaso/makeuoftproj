@@ -15,7 +15,10 @@ interface Message {
 }
 
 interface PackagingResponse {
-    packaging_recycling?: any;
+    packaging_recycling?: {
+        material: string;
+        instructions: string;
+    }[];
     error?: string;
 }
 
@@ -33,7 +36,6 @@ const Home: FC = () => {
     ]);
 
     const [isScannerActive, setIsScannerActive] = useState(false);
-    const [barcode, setBarcode] = useState<number | null>(null);
     
     useEffect(() => {
         if (isScannerActive) {
@@ -78,15 +80,13 @@ const Home: FC = () => {
                 Quagga.start();
             });
 
-            Quagga.onDetected((result: { codeResult: { format: string; code: string; direction: string; decodedCodes: { error: number }[] } }) => {
+            Quagga.onDetected((result: { codeResult: { code: string } }) => {
                 const code = result.codeResult.code;
-                console.log(result)
-                console.log("Barcode detected:", barcode);
+                console.log(result);
+                console.log("Barcode detected:", code);
 
-                setBarcode(barcode);
                 handleBarcodeDetected(code);
                 setIsScannerActive(false);
-                Quagga.stop();
             });
         }
 
