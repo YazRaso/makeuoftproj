@@ -1,4 +1,5 @@
 import { FC, useState, useEffect } from 'react';
+import { useRef } from 'react';
 import Navbar from './Navbar';
 import Quagga from 'quagga';
 
@@ -22,6 +23,7 @@ interface PackagingResponse {
     error?: string;
 }
 
+
 const Home: FC = () => {
     const [packagingInfo, setPackagingInfo] = useState<PackagingResponse | null>(null);
 
@@ -37,6 +39,8 @@ const Home: FC = () => {
 
     const [isScannerActive, setIsScannerActive] = useState(false);
     
+    const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
+
     useEffect(() => {
         if (isScannerActive) {
             Quagga.init({
@@ -84,9 +88,15 @@ const Home: FC = () => {
                 const code = result.codeResult.code;
                 console.log(result);
                 console.log("Barcode detected:", code);
-
-                handleBarcodeDetected(code);
-                setIsScannerActive(false);
+            
+                if (debounceTimeout.current) {
+                    clearTimeout(debounceTimeout.current);
+                }
+            
+                debounceTimeout.current = setTimeout(() => {
+                    handleBarcodeDetected(code);
+                    setIsScannerActive(false);
+                }, 1000); // Adjust the debounce delay as needed
             });
         }
 
@@ -96,6 +106,7 @@ const Home: FC = () => {
             }
         };
     }, [isScannerActive]);
+
 
     const handleBarcodeDetected = async (code: string) => {
         try {
@@ -111,6 +122,21 @@ const Home: FC = () => {
                     packaging_recycling: data
                 };
                 setPackagingInfo(packagingInfo);
+
+                //arduino integration
+                // Send barcode to backend
+                const backendResponse = await fetch("http://127.0.0.1:5000/open-bin", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ barcode: code })
+                });
+
+                if (backendResponse.ok) {
+                    const backendData = await backendResponse.json();
+                    console.log("Backend response:", backendData);
+                } else {
+                    console.error("Failed to send barcode to backend");
+                }
             } else {
                 console.error("Barcode not found");
                 const errorInfo: PackagingResponse = {

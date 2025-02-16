@@ -17,6 +17,9 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 Servo myServo;  // Create servo object
 
 float maxBinDistance;
+const int joystickY = A0;  // Y-axis pin
+int yValue;
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
@@ -37,26 +40,33 @@ void setup() {
     sum += maxBinDistance;
   }
   maxBinDistance = sum/10;
+
+}
+
+void closeBin(){
+  for (int pos = 0; pos <= 90; pos += 1) { 
+      myServo.write(pos); 
+      delay(15); // Smooth motion delay
+  }
 }
 
 void openBin(){
-    for (int pos = 0; pos <= 90; pos += 1) { 
-        myServo.write(pos); 
-        delay(15); // Smooth motion delay
-    }
-    delay(1000); 
+  for (int pos = 90; pos >= 0; pos -= 1) { 
+      myServo.write(pos); 
+      delay(15); // Smooth motion delay
+  }
 }
 
 float getDistance() {
-    digitalWrite(TRIG_PIN, LOW);
-    delay(2);
-    digitalWrite(TRIG_PIN, HIGH);
-    delay(10);
-    digitalWrite(TRIG_PIN, LOW);
+  digitalWrite(TRIG_PIN, LOW);
+  delay(2);
+  digitalWrite(TRIG_PIN, HIGH);
+  delay(10);
+  digitalWrite(TRIG_PIN, LOW);
 
-    long duration = pulseIn(ECHO_PIN, HIGH);
-    float distance = (duration * 0.034) / 2;  // Convert to cm
-    return distance;
+  long duration = pulseIn(ECHO_PIN, HIGH);
+  float distance = (duration * 0.034) / 2;  // Convert to cm
+  return distance;
 }
 
 void loop() {
@@ -64,42 +74,64 @@ void loop() {
   // put your main code here, to run repeatedly:
   String command = Serial.readStringUntil('\n'); // PYTHON open/close command
 
-    float distance = getDistance();
-    Serial.print("Trash Distance: ");
-    Serial.print(distance);
-    Serial.println(" cm");
-    Serial.println(maxBinDistance);
+  float distance = getDistance();
+  Serial.print("Trash Distance: ");
+  Serial.print(distance);
+  Serial.println(" cm");
+  Serial.println(maxBinDistance);
 
-    int percentageFull = ((maxBinDistance-distance)/20) * 100;
-    if (distance < BIN_FULL_THRESHOLD) {
-        Serial.println("Bin is full!");
-    }
-    else if (distance >= BIN_FULL_THRESHOLD && distance <= maxBinDistance){
-        Serial.println("Bin is " + String(percentageFull) + "% full!");
-        if(command == "OPEN"){
-          openBin();
-        }
-    }
-    else if (distance > maxBinDistance){
-        Serial.println("Bin is opened!");  // Keep lid open
-    }
+  int percentageFull = ((maxBinDistance-distance)/20) * 100;
+  if (distance < BIN_FULL_THRESHOLD) {
+      Serial.println("Bin is full!");
+  }
+  else if (distance >= BIN_FULL_THRESHOLD && distance <= maxBinDistance){
+      Serial.println("Bin is " + String(percentageFull) + "% full!");
+      if(command == "OPEN"){
+        openBin();
+      }
+  }
+  else if (distance > maxBinDistance+0.1){
+      Serial.println("Bin is opened!");  // Keep lid open
+  }
 
-    display.clearDisplay();
-    display.setTextSize(2);
-    display.setTextColor(SSD1306_WHITE);
-    display.setCursor(10, 25);
-    if (percentageFull < 100 && percentageFull >= 0) {
-      display.print("Capacity: ");
-      display.print(percentageFull);
-      display.print("%");
-    
-    } 
-    else if (percentageFull >= 100){
-      display.print("ITS FULL :(");
-    }
-    else{
-      display.print("Opened");
-    }
+  //Display
+  display.clearDisplay();
+  display.setTextSize(2);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(10, 25);
+  if (percentageFull < 100 && percentageFull >= 0) {
+    display.print("Capacity: ");
+    display.print(percentageFull);
+    display.print("%");
+  
+  } 
+  else if (percentageFull >= 100){
+    display.print("ITS FULL :(");
+  }
+  else{
+    display.print("Opened");
+  }
   display.display();
+
+  yValue = analogRead(joystickY); //make sure this is in the right orientation (the y axis might be the x axis depending on the orientation of the stick)
+  Serial.println(yValue);
+
+  if (yValue > 800){
+    Serial.println("OPEN THE DOOR");
+    openBin();
+  }
+  else if (yValue < 100){
+    Serial.println("CLOSE THE DOOR");
+    closeBin();
+  }
+  
+  //IR sensor
+  int trashDetected = digitalRead(IR_SENSOR_PIN); // Read sensor
+  if (trashDetected == HIGH) {  // If trash is thrown in
+    Serial.println("Trash Detected"); // Send message to Python
+    display.print("+1 point");
+    delay(1000)
+  }
+
   delay(100);
 }
