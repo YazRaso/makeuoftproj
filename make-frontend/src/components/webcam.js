@@ -1,3 +1,4 @@
+
 const scannerContainer = document.getElementById('scanner-container');
 
 document.getElementById('scan-button').addEventListener('click', function() {
